@@ -38,7 +38,6 @@ if($DEV){
 }
 
 
-
 /*
 
 print_r($current_user->ID);
@@ -48,9 +47,6 @@ echo "</pre>";
 
 */
 
-get_header();
-
-var_dump(wp_upload_dir());
 
 ?>
 <script>

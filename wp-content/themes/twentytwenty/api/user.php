@@ -40,8 +40,6 @@ function apiUserDoRegister($body){
     }
     $user_ID = $result;
     
-    update_user_meta($result, "usertype", $usertype);
-
     if($usertype === "agent"){
         $wpdb->query("INSERT INTO {$shops_table}(owner_ID) VALUES($user_ID)");
         $shop_ID = $wpdb->get_var("SELECT LAST_INSERT_ID()");

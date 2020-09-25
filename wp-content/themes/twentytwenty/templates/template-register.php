@@ -12,15 +12,6 @@ global $wpdb;
 get_header();
 
 ?>
-<link href="https://fonts.googleapis.com/css?family=Lato:300,400,400i,700|Poppins:300,400,500,600,700|PT+Serif:400,400i&display=swap" rel="stylesheet" type="text/css" />
-<link rel="stylesheet" href="/css/bootstrap.css" type="text/css" />
-<link rel="stylesheet" href="/css/style.css" type="text/css" />
-<link rel="stylesheet" href="/css/dark.css" type="text/css" />
-<link rel="stylesheet" href="/css/font-icons.css" type="text/css" />
-<link rel="stylesheet" href="/css/animate.css" type="text/css" />
-<link rel="stylesheet" href="/css/magnific-popup.css" type="text/css" />
-
-<link rel="stylesheet" href="/css/custom.css" type="text/css" />
 <style>
 .form-container {
 	display: flex;
@@ -59,95 +50,86 @@ get_header();
     margin-left: 15px;
 }
 
+.col-6 {
+  width: 50%;
+}
+.w-100 {
+  width: 100%;
+}
+
 </style>
 
+<h3>Don't have an Account? Register Now.</h3>
 
-<!-- Document Wrapper
-============================================= -->
-<div id="wrapper" class="clearfix">
-<!-- Content
-============================================= -->
-<section id="content">
-	<div class="content-wrap">
-		<div class="container clearfix">
+<p>* are required fiedls</p>
 
-			<div class="row">
+<div class="col-6 form-group">
+  <label for="register-form-name">* Name:</label>
+  <input type="text" id="register-form-name" name="register-form-name" value="" class="form-control" />
+    <div class="register-form-empty-message">
+        Empty Required Field
+    </div>
+</div>
 
-				<div class="col-md-8">
-					<h3>Don't have an Account? Register Now.</h3>
+<div class="col-6 form-group">
+  <label for="register-form-email">* Email Address:</label>
+  <input type="text" id="register-form-email" name="register-form-email" value="" class="form-control" />
+    <div class="register-form-empty-message">
+        Empty Required Field
+    </div>
+</div>
 
-					<p>* are required fiedls</p>
+<div class="w-100"></div>
 
-					<form id="register-form" name="register-form" class="row" action="#" method="post">
+<div class="col-6 form-group">
+  <label for="register-form-username">* Choose a Username:</label>
+  <input type="text" id="register-form-username"
+        name="register-form-username"
+        value="" class="form-control" />
+    <div class="register-form-empty-message">
+        Empty Required Field
+    </div>
+</div>
 
-						<div class="col-6 form-group">
-							<label for="register-form-name">* Name:</label>
-							<input type="text" id="register-form-name" name="register-form-name" value="" class="form-control" />
-                            <div class="register-form-empty-message">
-                                Empty Required Field
-                            </div>
-                        </div>
+<div class="col-6 form-group">
+  <label for="register-form-phone">Phone (Optional):</label>
+  <input type="text"
+      id="register-form-phone"
+      name="register-form-phone" value=""
+      class="form-control" />
+</div>
 
-						<div class="col-6 form-group">
-							<label for="register-form-email">* Email Address:</label>
-							<input type="text" id="register-form-email" name="register-form-email" value="" class="form-control" />
-                            <div class="register-form-empty-message">
-                                Empty Required Field
-                            </div>
-                        </div>
+<div class="w-100"></div>
 
-						<div class="w-100"></div>
+<div class="col-6 form-group">
+  <label for="register-form-password">* Choose Password:</label>
+  <input type="password"
+      id="register-form-password"
+      name="register-form-password" value=""
+      class="form-control" />
+                        
+  <div
+      id="register-form-password-unmatch"
+      style="display: none">
+    password not match
+  </div>
+  
+  <div class="register-form-empty-message">
+    Empty Required Field
+  </div>
 
-						<div class="col-6 form-group">
-							<label for="register-form-username">* Choose a Username:</label>
-							<input type="text" id="register-form-username" name="register-form-username" value="" class="form-control" />
-						
-                            
-                            <div class="register-form-empty-message">
-                                Empty Required Field
-                            </div>
-                        </div>
+</div>
 
-						<div class="col-6 form-group">
-							<label for="register-form-phone">Phone (Optional):</label>
-							<input type="text"
-									id="register-form-phone"
-									name="register-form-phone" value=""
-									class="form-control" />
-						</div>
-
-						<div class="w-100"></div>
-
-						<div class="col-6 form-group">
-							<label for="register-form-password">* Choose Password:</label>
-							<input type="password"
-									id="register-form-password"
-									name="register-form-password" value=""
-									class="form-control" />
-                                    
-                            <div
-                                    id="register-form-password-unmatch"
-                                    style="display: none">
-                                password not match
-                            </div>
-                            
-                            <div class="register-form-empty-message">
-                                Empty Required Field
-                            </div>
-
-						</div>
-
-						<div class="col-6 form-group">
-							<label for="register-form-repassword">* Re-enter Password:</label>
-							<input type="password"
-									id="register-form-repassword"
-									name="register-form-repassword" value=""
-									class="form-control" />
-                            
-                            <div class="invalid-feedback register-form-empty-message">
-                                Empty Required Field
-                            </div>
-						</div>
+<div class="col-6 form-group">
+  <label for="register-form-repassword">* Re-enter Password:</label>
+  <input type="password"
+      id="register-form-repassword"
+      name="register-form-repassword" value=""
+      class="form-control" />
+  <div class="invalid-feedback register-form-empty-message">
+      Empty Required Field
+  </div>
+</div>
 
                         
 						<div class="col-6 form-group">
@@ -163,37 +145,23 @@ get_header();
                             <label for="register-form-usertype-agent">Agent</label>
 						</div>
 
-						<div class="w-100"></div>
+<div class="w-100"></div>
 
-                        <div class="col-6 form-group agent-only">
-                            <label for="register-form-company">Company</label>
-                            <input type="text"
-                                    id="register-form-company"
-                                    name="register-form-company" value=""
-                                    class="form-control" />
-                        </div>
+<div class="col-6 form-group agent-only">
+  <label for="register-form-company">Company</label>
+  <input type="text"
+          id="register-form-company"
+          name="register-form-company" value=""
+          class="form-control" />
+</div>
 
 
-						<div class="col-12 form-group">
-							<button class="btn btn-dark m-0"
-									id="register-form-submit"
-									name="register-form-submit"
-									value="submit">Register Now</button>
-						</div>
-
-					</form>
-
-				</div>
-
-			</div>
-
-		</div>
-	</div>
-</section><!-- #content end -->
-
-<!-- Go To Top
-============================================= -->
-<div id="gotoTop" class="icon-angle-up"></div>
+<div class="col-12 form-group">
+  <button class="btn btn-dark m-0"
+      id="register-form-submit"
+      name="register-form-submit"
+      value="submit">Register Now</button>
+</div>
 
 <script>
 (function(){
