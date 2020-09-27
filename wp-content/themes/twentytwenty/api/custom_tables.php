@@ -16,7 +16,7 @@ $wpdb->query("CREATE TABLE IF NOT EXISTS {$profile_table} (
     license_verified    BOOLEAN DEFAULT 0,
     rating              FLOAT,
     phone               VARCHAR(20),
-    shop_ID             BIGINT(20) UNSIGNED NOT NULL,
+    shop_ID             BIGINT(20) UNSIGNED,
     PRIMARY KEY (ID),
     FOREIGN KEY (ID) REFERENCES {$users_table}(ID) ON DELETE CASCADE
 )");
@@ -64,6 +64,16 @@ echo `pwd`;
 
 add column:
 ALTER TABLE table ADD column_name column_definition;
+
+
+
+DELETE FROM table_name WHERE selection_criteria LIMIT 1; 
+
+
+INSERT INTO care28_userprofile(ID, usertype) VALUES (4, 'client');
+SELECT * FROM care28_userprofile;
+ALTER TABLE care28_userprofile MODIFY COLUMN shop_ID BIGINT(20) UNSIGNED;
+UPDATE care28_userprofile SET shop_ID=NULL WHERE ID=4;
 */
 
 ?>

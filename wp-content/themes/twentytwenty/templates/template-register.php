@@ -299,7 +299,8 @@ registerButton.addEventListener("click", async (e) => {
 		}),
 	});
 	if(out.status !== 200){
-		console.error("user register failed:", out);
+		console.error("user register failed:", out,
+        "\nbody:", await out.text());
 		return;
 	}
 	out = await out.json();

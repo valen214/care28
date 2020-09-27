@@ -24,6 +24,7 @@
  * Block Editor Settings
  */
 
+include __DIR__ . "/api/custom_tables.php";
 include __DIR__ . "/api/main.php";
 
 

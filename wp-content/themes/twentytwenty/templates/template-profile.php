@@ -115,6 +115,7 @@ body, #page-root {
 .user-bio-avatar {
     display: inline-block;
     height: 100%;
+    width: 120px;
     border: 1px solid rgba(0, 0, 0, 0.2);
     float: left;
     margin: 5px 20px 13px 0;
@@ -131,8 +132,8 @@ body, #page-root {
 }
 
 .user-bio-name {
-  font-size: 3.2rem;
-  margin: 3.5rem 0 2rem;;
+  font-size: 45px;
+  margin: 0 0 15px 0;
 }
 
 .user-bio-text-container {

@@ -5,8 +5,7 @@ use \Firebase\JWT\JWT;
 /*
 
 
-
-let _token = await fetch(document.location.origin +
+await fetch(document.location.origin +
     "/wp-json/jwt-auth/v1/token", {
   method: "POST",
   headers: {
@@ -16,132 +15,36 @@ let _token = await fetch(document.location.origin +
     username: "test_user",
     password: "literal_pass",
   })
-}).then(res => res.json()).then(res => res.token);
+}).then(res => res.json()
+).then(res => res.token
+).then(token => {
 
-fetch("https://goliathhorkos.com/wp-json/api/v1/info", {
+fetch(location.origin + "/wp-json/api/v1/info", {
     method: "POST",
     headers: {
         "Content-Type": "application/json"
     },
     body: JSON.stringify({
-        "type": "query_user",
-        "token": token || _token,
-        "fields": [
-          "user_nicename",
-          "display_name",
-          "abc",
-        ],
+        "type": "edit_user",
+        "token": _token,
+        "fields": {
+          "avatar": {
+            "name": "abc.png",
+            "format": "png",
+            "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+          },
+        },
     })
-}).then(res => res.text()).then(res => {
+}).then(res => res.text()
+).then(res => {
+  try{
+    console.log(JSON.parse(res));
+  } catch(e){
     console.log(res);
+  }
 })
 
-
-
-
-request
-{
-  "type": "query_user",
-  "token": "asdf",
-  "fields": [
-    "shop_description",
-    "shop_name",
-    "abc",
-  ],
-}
-response
-{
-  "body": {
-    "fields: {
-      "shop_description": "asdf",
-      "shop_name": "asdf",
-      "abc": null,
-    }
-  }
-}
-request
-{
-  "type": "edit_user",
-  "token": "asdf",
-  "fields": {
-    "shop_description": "ASFASFASFA",
-    "shop_name": "ASDASD",
-    "abc": "ASFASF",
-  }
-}
-response
-{
-  "body": "ok"
-}
-
-
-
-request
-{
-  type: query_product
-  token: asfdasfd
-  products: {
-    "123": {
-      fields: [
-        name
-        description
-      ]
-    },
-    "51342": {
-      fields: [ description ]
-    }
-  }
-}
-response
-{
-  "body": {
-    "products": {
-      "123": {
-        fields: {
-          name: "asdf"
-        }
-      },
-      "51342": {
-        fields: {
-          description: "asdf"
-        }
-      }
-    }
-  }
-
-}
-
-request
-{
-  "type": "edit_product",
-  "token": "asdf",
-  "id": 123,
-  "fields": {
-    "description": "ASFASFASFA",
-    "name": "ASDASD",
-    "abc": "ASFASF",
-  }
-}
-response
-{
-  "body": "ok"
-}
-
-
-request
-{
-  "type": "add_product",
-  "token": "asdf",
-  "fields": {
-    "description": "ASFASFASFA",
-    "name": "ASDASD",
-    "abc": "ASFASF",
-  }
-}
-response
-{
-  "body": "ok"
-}
+}); // end of token
 
 
 
@@ -160,6 +63,16 @@ Content-Type: application/json
 
 
 */
+
+function randomstring($length = 6) {
+  $dict = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  $len = strlen($dict);
+  $out = '';
+  for ($i = 0; $i < $length; $i++) {
+      $out .= $dict[rand(0, $len - 1)];
+  }
+  return $out;
+}
 
 function getUsertype($user_ID){
   include __DIR__ . "/custom_table_constants.php";
@@ -270,9 +183,20 @@ function editTable(
   $query_string = "";
   foreach($fields_constrain as $field_name){
     if($fields[$field_name]){
-      $query_string .= " `{$field_name}`='{$fields[$field_name]}' ";
+      if(empty($query_string)){
+        $query_string = $wpdb->prepare(
+            " `{$field_name}`=%s ",
+            $fields[$field_name]
+        );
+      } else{
+        $query_string .= ", " . $wpdb->prepare(
+            " `{$field_name}`=%s ",
+            $fields[$field_name]
+        );
+      }
     }
   }
+
 
   if($query_string){
     $query_result = $wpdb->query(
@@ -282,6 +206,79 @@ function editTable(
   }
 
   return $query_result;
+}
+
+
+function infoDoEditUser($user_ID, $body){
+  include __DIR__ . "/custom_table_constants.php";
+
+  try{
+
+  
+    $user_ID === $body["id"];
+
+    $hasEmail = array_search("email", array_keys($body["fields"]));
+    if($hasEmail !== FALSE){
+      $body["fields"]["user_email"] = $body["fields"]["email"];
+    }
+  
+  
+    $result = editTable(
+      $users_table,
+      $body["fields"],
+      $wpdb->prepare(" `ID`=%d ", $user_ID),
+      [
+        // from wp_users
+        "user_nicename",
+        "display_name",
+        "user_email",
+      ]
+    );
+    $result = editTable(
+      $profile_table,
+      $body["fields"],
+      $wpdb->prepare(" `ID`=%d ", $user_ID),
+      [
+        // from wp_userprofile
+        "phone",
+      ]
+    );
+  
+  
+  
+    $avatar = $body["fields"]["avatar"];
+    
+    $result = [
+      "editTableResult" => $result
+    ];
+    if(!empty($avatar)){
+
+      $avatar_folder = wp_get_upload_dir()["basedir"] . "/avatar/";
+
+      mkdir($avatar_folder, 0777, true);
+
+      $name = randomstring(6) . "-" . $avatar["name"];
+      $result["file_put_contents_result"] = file_put_contents(
+        $avatar_folder . $name,
+        base64_decode($avatar["data"])
+      );
+    }
+  
+    
+  
+    $body["fields"]["license"];
+  
+    header('Content-Type: application/json');
+    echo json_encode([
+      "body" => "ok",
+      "result" => $result
+    ]);
+
+  } catch(Exception $e){
+    http_response_code(409);
+    header('Content-Type: application/json');
+    echo '{"body": "no","result":"' . $e->getMessage() . '"}';
+  }
 }
 
 function infoDoPost(){
@@ -340,36 +337,26 @@ function infoDoPost(){
           $QUERY_USER_PROFILE_TYPE
         )[0] ?? array();
 
+        $extra = array();
+        if(in_array("email", $fields)){
+          if(empty($body["id"]) || $body["id"] === $user_ID){
+            $extra["email"] = $wpdb->get_var(
+                "SELECT user_email FROM {$users_table} WHERE `ID`={$user_ID}"
+            );
+          }
+        }
+
+
         header('Content-Type: application/json');
         echo json_encode(array_merge(
             $query_user_result,
-            $query_user_profile_result
+            $query_user_profile_result,
+            $extra
         ));
 
         exit;
     case "edit_user":
-
-      $result = editTable(
-        $users_table,
-        $body["fields"],
-        $wpdb->prepare(" WHERE `ID`=%d ", $body["id"] ?? $user_ID),
-        [
-          // from wp_users
-          "user_nicename",
-          "display_name",
-  
-          // from wp_userprofile
-          "phone",
-        ]
-      );
-
-      $body["fields"]["avatar"];
-      
-
-      $body["fields"]["license"];
-
-      header('Content-Type: application/json');
-      echo '{"body": "ok","result":"' . $result . '"}';
+      infoDoEditUser($user_ID, $body);
       exit;
     case "query_shop":
       
@@ -432,7 +419,7 @@ function infoDoPost(){
       $result = editTable(
         $shops_table,
         $body["fields"],
-        $wpdb->prepare(" WHERE `ID`=%d ", $shop_ID),
+        $wpdb->prepare(" `ID`=%d ", $shop_ID),
         [
           // from table wp_shops
           "description",
@@ -542,7 +529,7 @@ function infoDoPost(){
       $result = editTable(
         $shop_products_table,
         $body["fields"],
-        $wpdb->prepare(" WHERE `ID`=%d ", $product_ID),
+        $wpdb->prepare(" `ID`=%d ", $product_ID),
         [
           // from table $shop_products_table
           "description",

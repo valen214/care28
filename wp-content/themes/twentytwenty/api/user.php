@@ -1,11 +1,13 @@
 <?php
 
-global $wpdb;
-$profile_table = "{$wpdb->prefix}userprofile";
-$shops_table = "{$wpdb->prefix}shops";
+
 
 
 function apiUserDoRegister($body){
+    global $wpdb;
+    $profile_table = "{$wpdb->prefix}userprofile";
+    $shops_table = "{$wpdb->prefix}shops";
+
     header('Content-Type: application/json');
     
     $username = $body["username"];
@@ -46,15 +48,15 @@ function apiUserDoRegister($body){
 
 
         $wpdb->query("INSERT INTO {$profile_table}(
-            ID, usertype, shop_ID
+            `ID`, usertype, shop_ID
         ) VALUES (
-            {$user_ID}, {'agent'}, {$shop_ID}
+            {$user_ID}, 'agent', {$shop_ID}
         )");
     } else{
         $wpdb->query("INSERT INTO {$profile_table}(
-            ID, usertype
+            `ID`, usertype
         ) VALUES (
-            {$user_ID}, {'client'}
+            {$user_ID}, 'client'
         )");
     }
 

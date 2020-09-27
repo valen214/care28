@@ -180,14 +180,16 @@ form label {
           <div class="edit-profile-phone form-group">
             <label class="col-sm-2 control-label">Phone</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control">
+              <input id="edit-profile-phone-input"
+                  type="text" class="form-control">
             </div>
           </div>
           
           <div class="edit-profile-email form-group">
             <label class="col-sm-2 control-label">Email</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control">
+              <input id="edit-profile-email-input"
+                  type="text" class="form-control">
             </div>
           </div>
 
@@ -277,7 +279,8 @@ form label {
             <div class="col-sm-10 col-sm-offset-2">
               <button id="edit-profile-submit-button"
                   class="btn btn-primary">Submit</button>
-              <button type="reset" class="btn btn-default">Cancel</button>
+              <button id="edit-profile-cancel-button"
+                  type="reset" class="btn btn-default">Cancel</button>
             </div>
           </div>
         </div>
@@ -297,14 +300,23 @@ const register_as_agent_button = document.getElementsByClassName(
                 "edit-profile-register-as-agent")[0];
 const edit_profile_user_display_name_input = document.querySelector(
           ".edit-profile-user-display-name input");
+const edit_profile_email_input = document.getElementById(
+  "edit-profile-email-input"
+);
 const edit_profile_agent_panel = document.querySelector(
     ".edit-profile-agent-panel"
 );
 const edit_profile_submit_button = document.getElementById(
     "edit-profile-submit-button");
+const edit_profile_cancel_button = document.getElementById(
+    "edit-profile-cancel-button"
+);
 
 function doAPICall(payload){
   payload.token = localStorage.getItem("token");
+  if(!payload.token){
+    console.error("token is empty");
+  }
   return fetch(location.origin + "/wp-json/api/v1/info", {
       method: "POST",
       headers: {
@@ -319,6 +331,8 @@ doAPICall({
     "fields": [
       "display_name",
       "usertype",
+      "email",
+      "phone",
     ],
 }).then(res => res.json()).then(res => {
 
@@ -327,8 +341,13 @@ doAPICall({
       register_as_agent_button.style.display = "none";
     }
     if(res.display_name && !edit_profile_user_display_name_input.value){
-
       edit_profile_user_display_name_input.value = res.display_name;
+    }
+    if(res.email){
+      edit_profile_email_input.value = res.email;
+    }
+    if(res.phone){
+      document.getElementById("edit-profile-phone-input").value = res.phone;
     }
 }).catch(e => {
   console.log("Error:", e);
@@ -346,14 +365,20 @@ edit_profile_submit_button.addEventListener("click", e => {
       "type": "edit_user",
       "fields": {
         "display_name": edit_profile_user_display_name_input.value,
+        "phone": document.getElementById("edit-profile-phone-input").value,
+        "email": edit_profile_email_input.value
       },
   }).then(res => res.text()).then(res => {
     console.log(res);
-    location.reload();
+    // location.reload();
   }).catch(e => {
     console.log("Error:", e);
   });
 
+});
+
+edit_profile_cancel_button.addEventListener("click", e => {
+  location.pathname = "/profile";
 });
 
 </script>
