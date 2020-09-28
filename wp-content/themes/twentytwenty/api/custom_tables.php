@@ -17,6 +17,8 @@ $wpdb->query("CREATE TABLE IF NOT EXISTS {$profile_table} (
     rating              FLOAT,
     phone               VARCHAR(20),
     shop_ID             BIGINT(20) UNSIGNED,
+    avatar              TEXT,
+    license             TEXT,
     PRIMARY KEY (ID),
     FOREIGN KEY (ID) REFERENCES {$users_table}(ID) ON DELETE CASCADE
 )");
@@ -52,6 +54,13 @@ $wpdb->query("CREATE TABLE IF NOT EXISTS {$appointments_table} (
   PRIMARY KEY (ID),
   FOREIGN KEY (agent_ID) REFERENCES {$users_table}(ID) ON DELETE CASCADE,
   FOREIGN KEY (client_ID) REFERENCES {$users_table}(ID) ON DELETE CASCADE
+)");
+
+$wpdb->query("CREATE TABLE IF NOT EXISTS {$product_images_table} (
+  ID                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  product_ID          BIGINT UNSIGNED NOT NULL,
+  path                TEXT NOT NULL,
+  original_name       TEXT
 )");
 
 

@@ -13,6 +13,9 @@
 
 get_header();
 
+
+include dirname(__DIR__) . "/api/custom_table_constants.php";
+
 $current_user = wp_get_current_user();
 $user_display_name = $current_user->display_name;
 
@@ -23,6 +26,13 @@ $usertype = $wpdb->get_var(
 if(empty($usertype) || $usertype !== "agent"){
   $usertype = "client";
 } 
+
+
+$avatar_path = wp_get_upload_dir()["basedir"] . "/avatar/" . $wpdb->get_var(
+  "SELECT avatar FROM {$profile_table} WHERE `ID`={$user_ID}"
+);
+$avatar_path = "/wp-content" . explode("wp-content", $avatar_path)[1];
+
 
 ?>
 
@@ -159,9 +169,11 @@ form label {
     <form class="form-horizontal">
         <div class="panel panel-default">
           <div class="panel-body text-center">
-            <img src="/wp-content/themes/twentytwenty/assets/images/2020-avatar.jpg" class="img-circle profile-avatar" alt="User avatar">
+            <img src="<?php echo $avatar_path; ?>"
+                class="img-circle profile-avatar"
+                alt="User avatar">
           
-            <input type="file" />
+            <input id="edit-profile-user-avatar-input" type="file" />
           </div>
         </div>
       <div class="panel panel-default">
@@ -311,6 +323,9 @@ const edit_profile_submit_button = document.getElementById(
 const edit_profile_cancel_button = document.getElementById(
     "edit-profile-cancel-button"
 );
+const edit_profile_user_avatar_input = document.getElementById(
+  "edit-profile-user-avatar-input"
+);
 
 function doAPICall(payload){
   payload.token = localStorage.getItem("token");
@@ -359,18 +374,44 @@ register_as_agent_button.addEventListener("click", () => {
   register_as_agent_button.style.display = "none";
 });
 
-edit_profile_submit_button.addEventListener("click", e => {
+
+
+async function getAvatarConfigIfExists(){
+
+  let files = edit_profile_user_avatar_input.files;
+  if(files && files.length){
+    let file = files[0];
+    return {
+      "avatar": {
+        "name": file.name,
+        "format": file.type.match(/\/(.+)/)[1],
+        "data": await new Promise(res => {
+          let fr = new FileReader();
+          fr.addEventListener("load", () => {
+            let datauri = fr.result;
+            res(datauri.slice(datauri.indexOf(",") + 1));
+          });
+          fr.readAsDataURL(file);
+        })
+      }
+    }
+  } else{
+    return {};
+  }
+}
+edit_profile_submit_button.addEventListener("click", async e => {
   e.preventDefault();
   doAPICall({
       "type": "edit_user",
       "fields": {
         "display_name": edit_profile_user_display_name_input.value,
         "phone": document.getElementById("edit-profile-phone-input").value,
-        "email": edit_profile_email_input.value
+        "email": edit_profile_email_input.value,
+        ...await getAvatarConfigIfExists(),
       },
   }).then(res => res.text()).then(res => {
+    location.reload();
     console.log(res);
-    // location.reload();
   }).catch(e => {
     console.log("Error:", e);
   });

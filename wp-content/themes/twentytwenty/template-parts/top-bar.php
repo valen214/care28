@@ -63,7 +63,8 @@ $user_ID = get_current_user_id();
     margin-left: auto;
   }
 
-  .sign-in-button {
+  .sign-in-button,
+  .profile-button {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -88,6 +89,10 @@ $user_ID = get_current_user_id();
     </div>
   </div>
   <div class="nav-right">
+    <a class="profile-button"
+        href="/profile">
+      Profile
+    </a>
     <?php if(is_user_logged_in()): ?>
       <a class="sign-in-button">
         Log Out

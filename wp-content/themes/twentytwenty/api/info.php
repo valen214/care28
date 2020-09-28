@@ -4,7 +4,7 @@ use \Firebase\JWT\JWT;
 
 /*
 
-
+let _token =
 await fetch(document.location.origin +
     "/wp-json/jwt-auth/v1/token", {
   method: "POST",
@@ -17,7 +17,7 @@ await fetch(document.location.origin +
   })
 }).then(res => res.json()
 ).then(res => res.token
-).then(token => {
+).then(_token => {
 
 fetch(location.origin + "/wp-json/api/v1/info", {
     method: "POST",
@@ -25,15 +25,13 @@ fetch(location.origin + "/wp-json/api/v1/info", {
         "Content-Type": "application/json"
     },
     body: JSON.stringify({
-        "type": "edit_user",
+        "type": "query_product",
         "token": _token,
-        "fields": {
-          "avatar": {
-            "name": "abc.png",
-            "format": "png",
-            "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-          },
-        },
+        "id": [ 1, 2, 3 ],
+        "fields": [
+          "ID",
+          "images"
+        ],
     })
 }).then(res => res.text()
 ).then(res => {
@@ -44,6 +42,7 @@ fetch(location.origin + "/wp-json/api/v1/info", {
   }
 })
 
+return _token;
 }); // end of token
 
 
@@ -145,6 +144,23 @@ function verifyAgentAndReturnShopID($user_ID){
   return $shop_ID;
 }
 
+/**
+ * $image_object: {
+ *   name: string
+ *   format: png | jpeg | ...
+ *   data: <base64 string without data uri prefix>
+ * }
+ */
+function saveBase64Image($fullpath, $data){
+  if(!is_dir(dirname($fullpath))){
+    mkdir(dirname($fullpath), 0777, true);
+  }
+
+  return file_put_contents(
+    $fullpath,
+    base64_decode($data)
+  );
+}
 
 function queryTable(
   $table_name,
@@ -214,6 +230,7 @@ function infoDoEditUser($user_ID, $body){
 
   try{
 
+    $result = [];
   
     $user_ID === $body["id"];
 
@@ -223,7 +240,7 @@ function infoDoEditUser($user_ID, $body){
     }
   
   
-    $result = editTable(
+    $result["edit_users_result"] = editTable(
       $users_table,
       $body["fields"],
       $wpdb->prepare(" `ID`=%d ", $user_ID),
@@ -234,7 +251,7 @@ function infoDoEditUser($user_ID, $body){
         "user_email",
       ]
     );
-    $result = editTable(
+    $result["edit_profiles_result"] = editTable(
       $profile_table,
       $body["fields"],
       $wpdb->prepare(" `ID`=%d ", $user_ID),
@@ -247,26 +264,30 @@ function infoDoEditUser($user_ID, $body){
   
   
     $avatar = $body["fields"]["avatar"];
-    
-    $result = [
-      "editTableResult" => $result
-    ];
     if(!empty($avatar)){
-
-      $avatar_folder = wp_get_upload_dir()["basedir"] . "/avatar/";
-
-      mkdir($avatar_folder, 0777, true);
-
-      $name = randomstring(6) . "-" . $avatar["name"];
-      $result["file_put_contents_result"] = file_put_contents(
-        $avatar_folder . $name,
-        base64_decode($avatar["data"])
+      $result["save image result"] = saveBase64Image(
+        wp_get_upload_dir()["basedir"] . "/avatar/" . $name,
+        $avatar["data"]
       );
+
+      $result["update avatar result"] = $wpdb->query($wpdb->prepare(
+        "UPDATE {$profile_table} SET `avatar`=%s WHERE `ID`=%d",
+        $name, $user_ID
+      ));
     }
-  
-    
-  
-    $body["fields"]["license"];
+
+    $license = $body["fields"]["license"];
+    if(!empty($license)){
+      $result["save license result"] = saveBase64Image(
+        wp_get_upload_dir()["basedir"] . "/license/" . $name,
+        $license["data"]
+      );
+
+      $result["update license result"] = $wpdb->query($wpdb->prepare(
+        "UPDATE {$profile_table} SET `license`=%s WHERE `ID`=%d",
+        $name, $user_ID
+      ));
+    }
   
     header('Content-Type: application/json');
     echo json_encode([
@@ -279,6 +300,47 @@ function infoDoEditUser($user_ID, $body){
     header('Content-Type: application/json');
     echo '{"body": "no","result":"' . $e->getMessage() . '"}';
   }
+}
+
+function infoQueryProductsArray($fields, $condition){
+
+  $query_products_result = queryTable(
+    $shop_products_table,
+    array_unique(array_merge($fields, ["ID"])),
+    $condition,
+    [
+      // from table wp_shop_products
+      "ID",
+      "shop_ID",
+      "name",
+      "description"
+    ]
+  );
+
+  if(empty($query_products_result)){
+    return [];
+  }
+
+  $products_array = [];
+  
+  foreach($query_products_result as $product_entry){
+
+    if(in_array("images", $fields)){
+      $product_entry["images"] = array_map(
+        function($elem){
+          return $elem[0];
+        },
+        $wpdb->get_results($wpdb->prepare(
+          "SELECT `path` FROM {$product_images_table} WHERE product_ID=%d",
+          $product_entry["ID"]
+        ), ARRAY_N) ?? array()
+      );
+    }
+    
+    $products_array[$product_entry["ID"]] = $product_entry;
+  }
+
+  return $products_array;
 }
 
 function infoDoPost(){
@@ -318,6 +380,7 @@ function infoDoPost(){
           "rating",
           "phone",
           "shop_ID",
+          "avatar",
         ];
         $OTHERS = [
           "avatar", // base64 format without prefix
@@ -379,29 +442,10 @@ function infoDoPost(){
       )[0] ?? array();
 
       if(!empty($body["products"])){
-
-        $query_products_result = queryTable(
-          $shop_products_table,
-          array_unique(array_merge($body["products"], ["ID"])),
-          $wpdb->prepare(" `shop_ID`=%d ", $shop_ID),
-          [
-            // from table wp_shop_products
-            "ID",
-            "name",
-            "shop_ID",
-            "description"
-          ]
+        $query_shops_result["products"] = infoQueryProductsArray(
+            $body["products"],
+            $wpdb->prepare(" `shop_ID`=%d ", $shop_ID)
         );
-
-        if(empty($query_products_result)){
-          $query_shops_result["products"] = [];
-        } else{
-          $products_array = [];
-          foreach($query_products_result as $product_entry){
-            $products_array[$product_entry["ID"]] = $product_entry;
-          }
-          $query_shops_result["products"] = $products_array;
-        }
       }
 
       header('Content-Type: application/json');
@@ -452,11 +496,14 @@ function infoDoPost(){
       echo '{"body": "ok","result":"' . $result . '"}';
 
       exit;
+
+
     case "query_product":
+    case "query_products":
       if(is_array($body["id"])){
         $product_IDs = $body["id"];
       } else{
-        $product_IDs = [$body["id"]];
+        $product_IDs = [ $body["id"] ];
       }
 
       if(empty($product_IDs)){
@@ -464,42 +511,20 @@ function infoDoPost(){
         http_response_code(400);
         header('Content-Type: application/json');
         echo '{"body": "Bad Request: no id is presented in query_product, ' .
-              'maybe check spelling, it is lower-case. "}';
+              'may check spelling, it should be lower-case. "}';
         exit;
       }
 
       $condition = "`ID` IN(" .
           implode(', ', array_fill(0, count($product_IDs), '%s')) .
-          ")";
+      ")";
 
       $condition = call_user_func_array(array($wpdb, 'prepare'),
           array_merge(array($condition), $product_IDs));
 
+      $products_array = infoQueryProductsArray($body["fields"], $condition);
 
-      $query_products_result = queryTable(
-        $shop_products_table,
-        array_unique(array_merge($body["fields"], ["ID"])),
-        $condition,
-        [
-          // from table wp_shop_products
-          "ID",
-          "shop_ID",
-          "name",
-          "description"
-        ]
-      );
-
-      $response_body = [];
-      if(empty($query_products_result)){
-        $response_body["products"] = [];
-      } else{
-        $products_array = [];
-        foreach($query_products_result as $product_entry){
-          $products_array[$product_entry["ID"]] = $product_entry;
-        }
-        $response_body["products"] = $products_array;
-      }
-
+      $response_body["products"] = $products_array;
       
       header('Content-Type: application/json');
       echo json_encode([
