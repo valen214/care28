@@ -28,7 +28,7 @@ $wpdb->query("CREATE TABLE IF NOT EXISTS {$shops_table} (
     `name`              TEXT,
     `description`       TEXT,
     PRIMARY KEY (ID),
-    FOREIGN KEY (owner_ID) REFERENCES {$profile_table}(ID) ON DELETE CASCADE
+    FOREIGN KEY (owner_ID) REFERENCES {$users_table}(ID) ON DELETE CASCADE
 )");
 $wpdb->query("CREATE TABLE IF NOT EXISTS {$shop_products_table} (
     ID                  BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,

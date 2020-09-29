@@ -43,8 +43,13 @@ function apiUserDoRegister($body){
     $user_ID = $result;
     
     if($usertype === "agent"){
-        $wpdb->query("INSERT INTO {$shops_table}(owner_ID) VALUES($user_ID)");
-        $shop_ID = $wpdb->get_var("SELECT LAST_INSERT_ID()");
+        $result = $wpdb->insert($shops_table, [
+          "owner_ID" => $user_ID
+        ], [
+          "%d"
+        ]);
+
+        $shop_ID = $wpdb->insert_id;
 
 
         $wpdb->query("INSERT INTO {$profile_table}(
@@ -63,7 +68,7 @@ function apiUserDoRegister($body){
     http_response_code(200);
     echo json_encode(array(
         "body" => "user registered",
-        "usertype" => $usertype
+        "usertype" => $usertype,
     ));
     exit(0);
 }

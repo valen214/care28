@@ -106,7 +106,7 @@ function verifyAgentAndReturnShopID($user_ID){
   $query = $wpdb->prepare(
           "SELECT shop_ID, usertype
           FROM {$profile_table}
-          WHERE ID=%d", $user_ID);
+          WHERE `ID`=%d", $user_ID);
   $query_result = $wpdb->get_results($query);
 
   if(count($query_result) !== 1){
@@ -132,7 +132,7 @@ function verifyAgentAndReturnShopID($user_ID){
   $owner_ID = $wpdb->get_var(
           "SELECT owner_ID
           FROM {$shops_table}
-          WHERE ID={$shop_ID}");
+          WHERE `ID`={$shop_ID}");
   if($owner_ID !== $user_ID){
       http_response_code(400);
       echo '{"out":"shop (' . $shop_ID .
@@ -265,6 +265,7 @@ function infoDoEditUser($user_ID, $body){
   
     $avatar = $body["fields"]["avatar"];
     if(!empty($avatar)){
+      $name = randomstring(10) . "-" . $avatar["name"];
       $result["save image result"] = saveBase64Image(
         wp_get_upload_dir()["basedir"] . "/avatar/" . $name,
         $avatar["data"]
@@ -278,6 +279,7 @@ function infoDoEditUser($user_ID, $body){
 
     $license = $body["fields"]["license"];
     if(!empty($license)){
+      $name = randomstring(10) . "-" . $license["name"];
       $result["save license result"] = saveBase64Image(
         wp_get_upload_dir()["basedir"] . "/license/" . $name,
         $license["data"]
@@ -303,6 +305,7 @@ function infoDoEditUser($user_ID, $body){
 }
 
 function infoQueryProductsArray($fields, $condition){
+  include __DIR__ . "/custom_table_constants.php";
 
   $query_products_result = queryTable(
     $shop_products_table,
@@ -380,11 +383,8 @@ function infoDoPost(){
           "rating",
           "phone",
           "shop_ID",
-          "avatar",
-        ];
-        $OTHERS = [
-          "avatar", // base64 format without prefix
-          "license", // token is required
+          "avatar",   // base64 format without prefix
+          "license",  // token is required
         ];
 
         $query_user_result = queryTable(
@@ -454,25 +454,49 @@ function infoDoPost(){
       exit;
     case "edit_shop":
 
-      if(empty($body["id"])){
-        $shop_ID = verifyAgentAndReturnShopID($user_ID);
-      } else{
-        $shop_ID = $body["id"];
+      $shop_ID = verifyAgentAndReturnShopID($user_ID);
+      if(!empty($body["id"])){
+        if((string)$shop_ID !== (string)$body["id"]){
+          echo json_encode([
+            "error" => "provided edit shop id but is not owner"
+          ]);
+        }
       }
 
-      $result = editTable(
+      $fields = [];
+      if(!empty($body["fields"]["name"])){
+        $fields["name"] = $body["fields"]["name"];
+      }
+
+      $result = [];
+      $result["shop table update result"] = $wpdb->update(
         $shops_table,
         $body["fields"],
-        $wpdb->prepare(" `ID`=%d ", $shop_ID),
-        [
-          // from table wp_shops
-          "description",
-          "name",
-        ]
+        [ "ID" => $shop_ID ],
+        NULL,
+        [ "%d" ]
       );
 
+      if(!empty($body["fields"]["products"])){
+        foreach($body["fields"]["products"] as $product_ID => $product_config){
+          if(empty($product_config)){
+            $result["product table delete result"] = $wpdb->delete(
+                $shop_products_table,
+                [ "ID" => $product_ID ],
+                "%d"
+            );
+          } else{
+            $result["product table update result"] = $wpdb->update(
+              $shop_products_table,
+              $product_config,
+              [ "ID" => $product_ID ]
+            );
+          }
+        }
+      }
+
       header('Content-Type: application/json');
-      echo '{"body": "ok","result":"' . $result . '"}';
+      echo json_encode($result);
 
       exit;
     case "add_product":

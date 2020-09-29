@@ -18,22 +18,37 @@ html, body {
 </style>
 
 </head>
-<body>
-
-
-
 <?php
-
-
-
 
 
 include __DIR__ . "/template-parts/top-bar.php";
 include __DIR__ . "/api/custom_table_constants.php";
 
-getTopBar();
 
-echo dirname(wp_get_upload_dir()["basedir"] . "/avatar/");
-echo $wpdb->prepare("%s", $product_images_table);
-echo "<pre>";
-var_dump(wp_get_upload_dir());
+?>
+<body>
+
+<script>
+(function(){
+  
+  let injectStyleSheet = (href) => {
+    let link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+  };
+
+  let SCRIPT_ORIGIN = "http://150.136.251.80:8000";
+  injectStyleSheet(SCRIPT_ORIGIN + "/pages/Home.css");
+  import(
+    SCRIPT_ORIGIN + "/pages/Home.js"
+  ).then(module => {
+    new module.default({
+      target: document.body,
+      props: {
+
+      }
+    });
+  });
+})();
+</script>
