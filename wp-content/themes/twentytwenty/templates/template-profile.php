@@ -44,14 +44,17 @@ if(!empty($shop_ID)){
   $props["products"] = $products_data;
 }
 
-
+$SCRIPT_ORIGIN = "http://150.136.251.80:8000";
 
 ?><!DOCTYPE html>
 <html>
 <head>
-<?php
 
-?>
+<link rel="preload" as="style"
+    href="<?php echo $SCRIPT_ORIGIN; ?>/pages/Profile.css" />
+<link rel="modulepreload"
+    href="<?php echo $SCRIPT_ORIGIN; ?>/pages/Profile.js" />
+
 </head>
 <body>
 <script>
@@ -64,7 +67,7 @@ let injectStyleSheet = (href) => {
   document.head.appendChild(link);
 };
 
-let SCRIPT_ORIGIN = "http://150.136.251.80:8000";
+let SCRIPT_ORIGIN = "<?php echo $SCRIPT_ORIGIN; ?>";
 injectStyleSheet(SCRIPT_ORIGIN + "/pages/Profile.css");
 import(
   SCRIPT_ORIGIN + "/pages/Profile.js"
