@@ -1,21 +1,12 @@
 <!DOCTYPE html>
-<?php
-
-
-include __DIR__ . "/template-parts/top-bar.php";
-include __DIR__ . "/api/custom_table_constants.php";
-
-$SCRIPT_ORIGIN = "http://150.136.251.80:8000";
-
-?>
 <html>
 <head>
 
 
 <link rel="preload" as="style"
-    href="<?php echo $SCRIPT_ORIGIN; ?>/pages/Home.css" />
+    href="/pages/Home.css" />
 <link rel="modulepreload"
-    href="<?php echo $SCRIPT_ORIGIN; ?>/pages/Home.js" />
+    href="/pages/Home.js" />
 
 <style>
 * {
@@ -44,10 +35,9 @@ html, body {
     document.head.appendChild(link);
   };
 
-  let SCRIPT_ORIGIN = "<?php echo $SCRIPT_ORIGIN; ?>";
-  injectStyleSheet(SCRIPT_ORIGIN + "/pages/Home.css");
+  injectStyleSheet("/pages/Home.css");
   import(
-    SCRIPT_ORIGIN + "/pages/Home.js"
+    "/pages/Home.js"
   ).then(module => {
     new module.default({
       target: document.body,

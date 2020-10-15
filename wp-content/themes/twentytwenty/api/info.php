@@ -180,10 +180,11 @@ function queryTable(
   $columns = implode(", ", $columns);
 
   if($columns){
-    $query_result = $wpdb->get_results($wpdb->prepare(
+    $query_result = $wpdb->get_results(
       "SELECT {$columns} FROM {$table_name}" .
-      ($condition ? " WHERE {$condition}" : '')
-    ), ARRAY_A);
+      ($condition ? " WHERE {$condition}" : ''),
+      ARRAY_A
+    );
   }
 
   return empty($query_result) ? array() : $query_result;
@@ -198,7 +199,7 @@ function editTable(
 
   $query_string = "";
   foreach($fields_constrain as $field_name){
-    if($fields[$field_name]){
+    if(isset($fields[$field_name])){
       if(empty($query_string)){
         $query_string = $wpdb->prepare(
             " `{$field_name}`=%s ",
@@ -316,7 +317,13 @@ function infoQueryProductsArray($fields, $condition){
       "ID",
       "shop_ID",
       "name",
-      "description"
+      "description",
+      "thumbnail",
+      "area",
+      "estate",
+      "price",
+      "status",
+      "lastUpdated"
     ]
   );
 
@@ -351,26 +358,30 @@ function infoDoPost(){
 
   if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $body = json_decode(file_get_contents('php://input'), TRUE);
-    if(!isset($body["type"])) return;
-    $token = $body["token"];
-    try{
-      $out = JWT::decode($token, JWT_AUTH_SECRET_KEY, ['HS256']);
-    } catch(Exception $e){
-      header('HTTP/1.0 401 Unauthorized');
-      exit;
+    if(!isset($body["type"])){
+      return;
     }
 
-    $user_ID = $out->data->user->id;
-
-
+    $user_ID = 0;
+    if(isset($body["token"])){
+      $token = $body["token"];
+      try{
+        $out = JWT::decode($token, JWT_AUTH_SECRET_KEY, [ 'HS256' ]);
+      } catch(Exception $e){
+        header('HTTP/1.0 401 Unauthorized');
+        exit;
+      }
+  
+      $user_ID = $out->data->user->id;
+    }
     // $JWT_AUTH_PLUGIN_INSTANCE.
     switch($body["type"]){
     case "query_user":
         $fields = $body["fields"];
-
         
         $QUERY_USERS_TYPE = [
           // from wp_users
+          "ID",
           "user_nicename",
           "display_name",
         ];
@@ -409,8 +420,10 @@ function infoDoPost(){
           }
         }
 
+        $extra["ID"] = $user_ID;
 
         header('Content-Type: application/json');
+        header("Access-Control-Allow-Origin: *");
         echo json_encode(array_merge(
             $query_user_result,
             $query_user_profile_result,
@@ -448,7 +461,9 @@ function infoDoPost(){
         );
       }
 
+      $query_shops_result["shopID"] = $wpdb->prepare(" `shop_ID`=%d ", $shop_ID);
       header('Content-Type: application/json');
+      header("Access-Control-Allow-Origin: *");
       echo json_encode($query_shops_result);
 
       exit;
@@ -517,7 +532,7 @@ function infoDoPost(){
       ));
 
       header('Content-Type: application/json');
-      echo '{"body": "ok","result":"' . $result . '"}';
+      echo '{"body": "ok"}';
 
       exit;
 
@@ -585,9 +600,23 @@ function infoDoPost(){
           "name",
         ]
       );
-      header('Content-Type: application/json');
-      echo '{"body": "ok","result":"' . $result . '"}';
 
+      // $result = $wpdb->update(
+      //   $shop_products_table,
+      //   $body["fields"],
+      //   "%s %s",
+      //   [ "ID" => $body["id"] ]
+      // );
+
+
+      header('Content-Type: application/json');
+      echo json_encode([
+        "body" => "ok",
+        "id" => $body["id"],
+        "result" => $body["fields"],
+        "result === false" => $result === FALSE,
+        "error" => $wpdb->last_error
+      ]);
       exit;
     }
   }

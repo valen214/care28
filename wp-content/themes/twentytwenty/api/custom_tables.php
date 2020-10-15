@@ -50,6 +50,7 @@ $wpdb->query("CREATE TABLE IF NOT EXISTS {$appointments_table} (
   confirmed           BOOLEAN DEFAULT 0,
   `finished_date`     TIMESTAMP,
   finished            BOOLEAN DEFAULT 0,
+  feedback            TEXT,
   
   PRIMARY KEY (ID),
   FOREIGN KEY (agent_ID) REFERENCES {$users_table}(ID) ON DELETE CASCADE,

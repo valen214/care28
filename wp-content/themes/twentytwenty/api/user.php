@@ -93,14 +93,15 @@ function userDoPost($data){
             case "login":
                 $username = $body["username"];
                 $password = $body["password"];
-    
-    
-                header('Content-Type: application/json');
                 
                 $result = wp_signon(array(
                     "user_login" => $username,
                     "user_password" => $password,
                 ));
+    
+    
+                header('Content-Type: application/json');
+                header("Access-Control-Allow-Origin: *");
                 if(is_wp_error($result)){
                     http_response_code(401);
                     echo json_encode(array(
@@ -108,11 +109,15 @@ function userDoPost($data){
                     ));
                     exit(0);
                 } else{
-                    
+                    include __DIR__ . "/custom_table_constants.php";
                     http_response_code(200);
                     echo json_encode(array(
                         "body" => "ok",
-                        
+                        "usertype" => $wpdb->get_var(
+                          "SELECT usertype FROM {$profile_table} WHERE `ID`={$result->ID}"
+                        ),
+                        "id" => $result->ID,
+                        "signon_result" => $result
                     ));
                     exit(0);
                 }
