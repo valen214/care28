@@ -66,6 +66,10 @@ add_action("parse_request", function($wp){
   case "404":
     showSveltePage("404");
     exit;
+  case "appointment":
+  case "appointments":
+    showSveltePage("Appointment");
+    exit;
   case "static_file":
     switch(pathinfo($path, PATHINFO_EXTENSION)){
     case "js":
@@ -90,12 +94,9 @@ add_action("parse_request", function($wp){
 
   if($wp->request === "abcd/efgh/ijkl"){
     echo "<pre>";
-    echo json_encode([]) . "\n\n";
-    echo json_encode([
-      "a" => "b",
-      "c" => [],
-      "d" => [ "1", "2" , "3" ]
-    ]) . "\n\n";
+    echo strtotime("2020-10-16");
+
+    include __DIR__ . "/api/custom_table_constants.php";
     var_dump($wp);
 
     exit;

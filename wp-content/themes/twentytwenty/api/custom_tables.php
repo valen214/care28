@@ -19,6 +19,7 @@ $wpdb->query("CREATE TABLE IF NOT EXISTS {$profile_table} (
     shop_ID             BIGINT(20) UNSIGNED,
     avatar              TEXT,
     license             TEXT,
+    area                TEXT,
     PRIMARY KEY (ID),
     FOREIGN KEY (ID) REFERENCES {$users_table}(ID) ON DELETE CASCADE
 )");
@@ -44,6 +45,8 @@ $wpdb->query("CREATE TABLE IF NOT EXISTS {$appointments_table} (
   ID                  BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   agent_ID            BIGINT(20) UNSIGNED NOT NULL,
   client_ID           BIGINT(20) UNSIGNED NOT NULL,
+  client_message      TEXT,
+  agent_message       TEXT,
   `initiated_date`    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `requested_date`    TIMESTAMP,
   `confirmed_date`    TIMESTAMP,

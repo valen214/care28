@@ -227,6 +227,7 @@ function editTable(
 
 
 function infoDoEditUser($user_ID, $body){
+  header("Access-Control-Allow-Origin: *");
   include __DIR__ . "/custom_table_constants.php";
 
   try{
@@ -353,271 +354,296 @@ function infoQueryProductsArray($fields, $condition){
   return $products_array;
 }
 
+
 function infoDoPost(){
-  include __DIR__ . "/custom_table_constants.php";
+  try{
 
-  if($_SERVER['REQUEST_METHOD'] === 'POST'){
-    $body = json_decode(file_get_contents('php://input'), TRUE);
-    if(!isset($body["type"])){
-      return;
-    }
-
-    $user_ID = 0;
-    if(isset($body["token"])){
-      $token = $body["token"];
-      try{
-        $out = JWT::decode($token, JWT_AUTH_SECRET_KEY, [ 'HS256' ]);
-      } catch(Exception $e){
-        header('HTTP/1.0 401 Unauthorized');
-        exit;
+    include __DIR__ . "/custom_table_constants.php";
+    include __DIR__ . "/util.php";
+  
+    if($_SERVER['REQUEST_METHOD'] === 'POST'){
+      $body = json_decode(file_get_contents('php://input'), TRUE);
+      if(!isset($body["type"])){
+        return;
       }
   
-      $user_ID = $out->data->user->id;
-    }
-    // $JWT_AUTH_PLUGIN_INSTANCE.
-    switch($body["type"]){
-    case "query_user":
-        $fields = $body["fields"];
-        
-        $QUERY_USERS_TYPE = [
-          // from wp_users
-          "ID",
-          "user_nicename",
-          "display_name",
-        ];
-        $QUERY_USER_PROFILE_TYPE = [
-          // from wp_userprofile
-          "usertype",
-          "verified",
-          "email_verified",
-          "license_verified",
-          "rating",
-          "phone",
-          "shop_ID",
-          "avatar",   // base64 format without prefix
-          "license",  // token is required
-        ];
-
-        $query_user_result = queryTable(
-          $users_table,
-          $body["fields"],
-          $wpdb->prepare("`ID`=%d", $body["id"] ?? $user_ID),
-          $QUERY_USERS_TYPE
-        )[0] ?? array();
-        $query_user_profile_result = queryTable(
-          $profile_table,
-          $body["fields"],
-          $wpdb->prepare("`ID`=%d", $body["id"] ?? $user_ID),
-          $QUERY_USER_PROFILE_TYPE
-        )[0] ?? array();
-
-        $extra = array();
-        if(in_array("email", $fields)){
-          if(empty($body["id"]) || $body["id"] === $user_ID){
-            $extra["email"] = $wpdb->get_var(
-                "SELECT user_email FROM {$users_table} WHERE `ID`={$user_ID}"
-            );
+      // $JWT_AUTH_PLUGIN_INSTANCE.
+      switch($body["type"]){
+      case "query_user":
+          $fields = $body["fields"];
+          
+          $QUERY_USERS_TYPE = [
+            // from wp_users
+            "ID",
+            "user_nicename",
+            "display_name",
+          ];
+          $QUERY_USER_PROFILE_TYPE = [
+            // from wp_userprofile
+            "usertype",
+            "verified",
+            "email_verified",
+            "license_verified",
+            "rating",
+            "phone",
+            "shop_ID",
+            "avatar",   // base64 format without prefix
+            "license",  // token is required
+          ];
+  
+          $user_ID = getUserID($body);
+          $query_user_result = queryTable(
+            $users_table,
+            $body["fields"],
+            $wpdb->prepare("`ID`=%d", $body["id"] ?? $user_ID),
+            $QUERY_USERS_TYPE
+          )[0] ?? array();
+          $query_user_profile_result = queryTable(
+            $profile_table,
+            $body["fields"],
+            $wpdb->prepare("`ID`=%d", $body["id"] ?? $user_ID),
+            $QUERY_USER_PROFILE_TYPE
+          )[0] ?? array();
+  
+          $extra = array();
+          if(in_array("email", $fields)){
+            if(empty($body["id"]) || $body["id"] === $user_ID){
+              $extra["email"] = $wpdb->get_var(
+                  "SELECT user_email FROM {$users_table} WHERE `ID`={$user_ID}"
+              );
+            }
           }
+  
+          $extra["ID"] = $user_ID;
+  
+          header('Content-Type: application/json');
+          header("Access-Control-Allow-Origin: *");
+          echo json_encode(array_merge(
+              $query_user_result,
+              $query_user_profile_result,
+              $extra
+          ));
+  
+          exit;
+      case "edit_user":
+        $user_ID = getUserID($body);
+        infoDoEditUser($user_ID, $body);
+        exit;
+      case "query_shop":
+        if(empty($body["id"])){
+          $user_ID = getUserID($body);
+          $shop_ID = verifyAgentAndReturnShopID($user_ID);
+        } else{
+          $shop_ID = $body["id"];
         }
-
-        $extra["ID"] = $user_ID;
-
+  
+        $query_shops_result = queryTable(
+          $shops_table,
+          $body["fields"],
+          $wpdb->prepare(" `ID`=%d ", $shop_ID),
+          [
+            // from table wp_shops
+            "owner_ID",
+            "description",
+            "name",
+          ]
+        )[0] ?? array();
+  
+        if(!empty($body["products"])){
+          $query_shops_result["products"] = infoQueryProductsArray(
+              $body["products"],
+              $wpdb->prepare(" `shop_ID`=%d ", $shop_ID)
+          );
+        }
+  
+        $query_shops_result["shopID"] = $wpdb->prepare(" `shop_ID`=%d ", $shop_ID);
         header('Content-Type: application/json');
         header("Access-Control-Allow-Origin: *");
-        echo json_encode(array_merge(
-            $query_user_result,
-            $query_user_profile_result,
-            $extra
-        ));
-
+        echo json_encode($query_shops_result);
+  
         exit;
-    case "edit_user":
-      infoDoEditUser($user_ID, $body);
-      exit;
-    case "query_shop":
-      
-      if(empty($body["id"])){
+      case "edit_shop":
+  
+        $user_ID = getUserID($body);
         $shop_ID = verifyAgentAndReturnShopID($user_ID);
-      } else{
-        $shop_ID = $body["id"];
-      }
-
-      $query_shops_result = queryTable(
-        $shops_table,
-        $body["fields"],
-        $wpdb->prepare(" `ID`=%d ", $shop_ID),
-        [
-          // from table wp_shops
-          "owner_ID",
-          "description",
-          "name",
-        ]
-      )[0] ?? array();
-
-      if(!empty($body["products"])){
-        $query_shops_result["products"] = infoQueryProductsArray(
-            $body["products"],
-            $wpdb->prepare(" `shop_ID`=%d ", $shop_ID)
-        );
-      }
-
-      $query_shops_result["shopID"] = $wpdb->prepare(" `shop_ID`=%d ", $shop_ID);
-      header('Content-Type: application/json');
-      header("Access-Control-Allow-Origin: *");
-      echo json_encode($query_shops_result);
-
-      exit;
-    case "edit_shop":
-
-      $shop_ID = verifyAgentAndReturnShopID($user_ID);
-      if(!empty($body["id"])){
-        if((string)$shop_ID !== (string)$body["id"]){
-          echo json_encode([
-            "error" => "provided edit shop id but is not owner"
-          ]);
-        }
-      }
-
-      $fields = [];
-      if(!empty($body["fields"]["name"])){
-        $fields["name"] = $body["fields"]["name"];
-      }
-
-      $result = [];
-      $result["shop table update result"] = $wpdb->update(
-        $shops_table,
-        $body["fields"],
-        [ "ID" => $shop_ID ],
-        NULL,
-        [ "%d" ]
-      );
-
-      if(!empty($body["fields"]["products"])){
-        foreach($body["fields"]["products"] as $product_ID => $product_config){
-          if(empty($product_config)){
-            $result["product table delete result"] = $wpdb->delete(
-                $shop_products_table,
-                [ "ID" => $product_ID ],
-                "%d"
-            );
-          } else{
-            $result["product table update result"] = $wpdb->update(
-              $shop_products_table,
-              $product_config,
-              [ "ID" => $product_ID ]
-            );
+        if(!empty($body["id"])){
+          if((string)$shop_ID !== (string)$body["id"]){
+            echo json_encode([
+              "error" => "provided edit shop id but is not owner"
+            ]);
           }
         }
-      }
-
-      header('Content-Type: application/json');
-      echo json_encode($result);
-
-      exit;
-    case "add_product":
-      $shop_ID = verifyAgentAndReturnShopID($user_ID);
-
-      $result = $wpdb->query($wpdb->prepare(
-        "INSERT INTO {$shop_products_table}(
-          shop_ID,
-          `name`,
-          `description`
-        ) VALUES(
-          {$shop_ID},
-          %s,
-          %s
-        )",
-        $body["fields"]["name"],
-        $body["fields"]["description"]
-      ));
-
-      header('Content-Type: application/json');
-      echo '{"body": "ok"}';
-
-      exit;
-
-
-    case "query_product":
-    case "query_products":
-      if(is_array($body["id"])){
-        $product_IDs = $body["id"];
-      } else{
-        $product_IDs = [ $body["id"] ];
-      }
-
-      if(empty($product_IDs)){
-
-        http_response_code(400);
+  
+        $fields = [];
+        if(!empty($body["fields"]["name"])){
+          $fields["name"] = $body["fields"]["name"];
+        }
+  
+        $result = [];
+        $result["shop table update result"] = $wpdb->update(
+          $shops_table,
+          $body["fields"],
+          [ "ID" => $shop_ID ],
+          NULL,
+          [ "%d" ]
+        );
+  
+        if(!empty($body["fields"]["products"])){
+          foreach($body["fields"]["products"] as $product_ID => $product_config){
+            if(empty($product_config)){
+              $result["product table delete result"] = $wpdb->delete(
+                  $shop_products_table,
+                  [ "ID" => $product_ID ],
+                  "%d"
+              );
+            } else{
+              $result["product table update result"] = $wpdb->update(
+                $shop_products_table,
+                $product_config,
+                [ "ID" => $product_ID ]
+              );
+            }
+          }
+        }
+  
         header('Content-Type: application/json');
-        echo '{"body": "Bad Request: no id is presented in query_product, ' .
-              'may check spelling, it should be lower-case. "}';
+        echo json_encode($result);
+  
         exit;
-      }
-
-      $condition = "`ID` IN(" .
-          implode(', ', array_fill(0, count($product_IDs), '%s')) .
-      ")";
-
-      $condition = call_user_func_array(array($wpdb, 'prepare'),
-          array_merge(array($condition), $product_IDs));
-
-      $products_array = infoQueryProductsArray($body["fields"], $condition);
-
-      $response_body["products"] = $products_array;
-      
-      header('Content-Type: application/json');
-      echo json_encode([
-        "body" => $response_body
-      ]);
-
-      exit;
-    case "edit_product":
-      $shop_ID = verifyAgentAndReturnShopID($user_ID);
-      $product_ID = $body["id"];
-
-      $product_shop_ID = $wpdb->get_var($wpdb->prepare(
-        "SELECT shop_ID FROM {$shop_products_table} WHERE `ID`=%d",
-        $product_ID
-      ));
-
-      if($product_shop_ID !== $shop_ID){
+      case "add_product":
+        $user_ID = getUserID($body);
+        $shop_ID = verifyAgentAndReturnShopID($user_ID);
+  
+        $result = $wpdb->query($wpdb->prepare(
+          "INSERT INTO {$shop_products_table}(
+            shop_ID,
+            `name`,
+            `description`
+          ) VALUES(
+            {$shop_ID},
+            %s,
+            %s
+          )",
+          $body["fields"]["name"],
+          $body["fields"]["description"]
+        ));
+  
+        header('Content-Type: application/json');
+        echo '{"body": "ok"}';
+  
+        exit;
+  
+  
+      case "query_product":
+      case "query_products":
+        if(is_array($body["id"])){
+          $product_IDs = $body["id"];
+        } else{
+          $product_IDs = [ $body["id"] ];
+        }
+  
+        if(empty($product_IDs)){
+  
+          http_response_code(400);
+          header('Content-Type: application/json');
+          echo '{"body": "Bad Request: no id is presented in query_product, ' .
+                'may check spelling, it should be lower-case. "}';
+          exit;
+        }
+  
+        $condition = "`ID` IN(" .
+            implode(', ', array_fill(0, count($product_IDs), '%s')) .
+        ")";
+  
+        $condition = call_user_func_array(array($wpdb, 'prepare'),
+            array_merge(array($condition), $product_IDs));
+  
+        $products_array = infoQueryProductsArray($body["fields"], $condition);
+  
+        $response_body["products"] = $products_array;
+        
         header('Content-Type: application/json');
         echo json_encode([
-          "ok" => false,
-          "body" => "product requested to edit '{$product_ID}' ".
-              "probably does not belong to current user/shop"
+          "body" => $response_body
+        ]);
+  
+        exit;
+      case "edit_product":
+        $user_ID = getUserID($body);
+        $shop_ID = verifyAgentAndReturnShopID($user_ID);
+        $product_ID = $body["id"];
+  
+        $product_shop_ID = $wpdb->get_var($wpdb->prepare(
+          "SELECT shop_ID FROM {$shop_products_table} WHERE `ID`=%d",
+          $product_ID
+        ));
+  
+        if($product_shop_ID !== $shop_ID){
+          header('Content-Type: application/json');
+          echo json_encode([
+            "ok" => false,
+            "body" => "product requested to edit '{$product_ID}' ".
+                "probably does not belong to current user/shop"
+          ]);
+          exit;
+        }
+  
+        $result = editTable(
+          $shop_products_table,
+          $body["fields"],
+          $wpdb->prepare(" `ID`=%d ", $product_ID),
+          [
+            // from table $shop_products_table
+            "description",
+            "name",
+          ]
+        );
+  
+        // $result = $wpdb->update(
+        //   $shop_products_table,
+        //   $body["fields"],
+        //   "%s %s",
+        //   [ "ID" => $body["id"] ]
+        // );
+  
+  
+        header('Content-Type: application/json');
+        echo json_encode([
+          "body" => "ok",
+          "id" => $body["id"],
+          "result" => $body["fields"],
+          "result === false" => $result === FALSE,
+          "error" => $wpdb->last_error
+        ]);
+        exit;
+      case "query_outstanding_agent":
+      case "query_outstanding_agents":
+        header("Content-Type: application/json");
+        header("Access-Control-Allow-Origin: *");
+        echo json_encode([
+          "agents" => array_map(
+              function($obj){
+                return $obj;
+              },
+              $wpdb->get_results(
+                  "SELECT
+                      {$profile_table}.ID,
+                      {$profile_table}.area,
+                      {$profile_table}.rating,
+                      {$profile_table}.avatar,
+                      {$users_table}.display_name as 'name'
+                  FROM {$profile_table} JOIN {$users_table}
+                  ON {$profile_table}.ID={$users_table}.ID
+                  WHERE usertype='agent'
+                  ORDER BY {$profile_table}.rating DESC LIMIT 10", ARRAY_A 
+              )
+          )
         ]);
         exit;
       }
-
-      $result = editTable(
-        $shop_products_table,
-        $body["fields"],
-        $wpdb->prepare(" `ID`=%d ", $product_ID),
-        [
-          // from table $shop_products_table
-          "description",
-          "name",
-        ]
-      );
-
-      // $result = $wpdb->update(
-      //   $shop_products_table,
-      //   $body["fields"],
-      //   "%s %s",
-      //   [ "ID" => $body["id"] ]
-      // );
-
-
-      header('Content-Type: application/json');
-      echo json_encode([
-        "body" => "ok",
-        "id" => $body["id"],
-        "result" => $body["fields"],
-        "result === false" => $result === FALSE,
-        "error" => $wpdb->last_error
-      ]);
-      exit;
     }
+  } catch(Exception $e){
+    var_dump($e);
+    exit;
   }
 }
