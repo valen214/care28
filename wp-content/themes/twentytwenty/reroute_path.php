@@ -59,7 +59,12 @@ add_action("parse_request", function($wp){
 
   $PAGE = "";
   switch($match ?: $path){
+  case "login":
+    showSveltePage("Login");
+    exit;
   case "profile":
+    showSveltePage("Profile");
+    exit;
   case "shop":
     showSveltePage("Shop");
     exit;
@@ -69,6 +74,10 @@ add_action("parse_request", function($wp){
   case "appointment":
   case "appointments":
     showSveltePage("Appointment");
+    exit;
+  case "make_appointment":
+  case "make-appointment":
+    showSveltePage("MakeAppointment");
     exit;
   case "static_file":
     switch(pathinfo($path, PATHINFO_EXTENSION)){

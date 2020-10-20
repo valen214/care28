@@ -22,12 +22,12 @@ add_action('rest_api_init', function(){
     register_rest_route("api/v1", "appointments", array(
         "methods" => "POST",
         "callback" => "appointmentDoPost",
-        'permission_callback' => '__return_true',
+        'permission_callback' => '__return_true'
     ));
     register_rest_route("api/v1", "appointment", array(
         "methods" => "POST",
         "callback" => "appointmentDoPost",
-        'permission_callback' => '__return_true',
+        'permission_callback' => '__return_true'
     ));
 
     

@@ -4,7 +4,7 @@
 
 function make_appointment($body){
   header("Access-Control-Allow-Origin: *");
-  include dirname(__DIR__) . "/util.php";
+  include_once dirname(__DIR__) . "/util.php";
   include dirname(__DIR__) . "/custom_table_constants.php";
   
   $user_ID = getUserID($body);

@@ -390,18 +390,22 @@ function infoDoPost(){
             "avatar",   // base64 format without prefix
             "license",  // token is required
           ];
-  
-          $user_ID = getUserID($body);
+          
+          if(isset($body["id"]) || isset($body["ID"])){
+            $user_ID = $body["id"] ?? $body["ID"];
+          } else{
+            $user_ID = getUserID($body);
+          }
           $query_user_result = queryTable(
             $users_table,
             $body["fields"],
-            $wpdb->prepare("`ID`=%d", $body["id"] ?? $user_ID),
+            $wpdb->prepare("`ID`=%d", $user_ID),
             $QUERY_USERS_TYPE
           )[0] ?? array();
           $query_user_profile_result = queryTable(
             $profile_table,
             $body["fields"],
-            $wpdb->prepare("`ID`=%d", $body["id"] ?? $user_ID),
+            $wpdb->prepare("`ID`=%d", $user_ID),
             $QUERY_USER_PROFILE_TYPE
           )[0] ?? array();
   
