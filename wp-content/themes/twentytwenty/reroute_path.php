@@ -80,6 +80,10 @@ add_action("parse_request", function($wp){
     showSveltePage("MakeAppointment");
     exit;
   case "static_file":
+    /**
+     * TODO:
+     * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+     */
     switch(pathinfo($path, PATHINFO_EXTENSION)){
     case "js":
       header("Content-Type: application/javascript; charset=utf-8");

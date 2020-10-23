@@ -59,6 +59,16 @@ $wpdb->query("CREATE TABLE IF NOT EXISTS {$appointments_table} (
   FOREIGN KEY (agent_ID) REFERENCES {$users_table}(ID) ON DELETE CASCADE,
   FOREIGN KEY (client_ID) REFERENCES {$users_table}(ID) ON DELETE CASCADE
 )");
+$wpdb->query("CREATE TABLE IF NOT EXISTS {$appointment_chat_table} (
+  ID                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  appointment_ID      BIGINT UNSIGNED NOT NULL,
+  `type`              TEXT,
+  `text`              TEXT,
+  `time`              TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+
+  FOREIGN KEY (appointment_ID) REFERENCES {$appointments_table}(ID)
+)");
 
 $wpdb->query("CREATE TABLE IF NOT EXISTS {$product_images_table} (
   ID                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,

@@ -9,6 +9,7 @@ $shop_products_table = "{$wpdb->prefix}shop_products";
 $product_images_table = "{$wpdb->prefix}product_images";
 
 $appointments_table = "{$wpdb->prefix}appointments";
+$appointment_chat_table = "{$wpdb->prefix}appointment_chat";
 
 
 /**
