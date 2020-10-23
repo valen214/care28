@@ -55,10 +55,15 @@ add_action("parse_request", function($wp){
     $match = "shop";
   } else if(substr($path, 0, 6) === "pages/"){
     $match = "static_file";
+  } else if(substr($path, 0, 17) === "view-appointment/"){
+    $match = "view-appointment";
   }
 
   $PAGE = "";
   switch($match ?: $path){
+  case "view-appointment":
+    showSveltePage("ViewAppointment");
+    exit;
   case "login":
     showSveltePage("Login");
     exit;
