@@ -1,5 +1,5 @@
 <?php
-// being included in ./functions.php
+// this file is imported by ./functions.php
 
 function showSveltePage($PAGE = "Home", $props = []){
 ?><!DOCTYPE html>
@@ -69,6 +69,9 @@ add_action("parse_request", function($wp){
     exit;
   case "profile":
     showSveltePage("Profile");
+    exit;
+  case "edit-profile":
+    showSveltePage("EditProfile");
     exit;
   case "shop":
     showSveltePage("Shop");

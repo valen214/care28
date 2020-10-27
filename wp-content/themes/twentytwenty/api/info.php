@@ -625,23 +625,28 @@ function infoDoPost(){
         header("Content-Type: application/json");
         header("Access-Control-Allow-Origin: *");
         echo json_encode([
-          "agents" => array_map(
-              function($obj){
-                return $obj;
-              },
+          "agents" =>
+            // array_map(
+            //   // for data transformation if necessary
+            //   function($obj){
+            //     return $obj;
+            //   },
               $wpdb->get_results(
                   "SELECT
-                      {$profile_table}.ID,
-                      {$profile_table}.area,
-                      {$profile_table}.rating,
-                      {$profile_table}.avatar,
-                      {$users_table}.display_name as 'name'
-                  FROM {$profile_table} JOIN {$users_table}
-                  ON {$profile_table}.ID={$users_table}.ID
-                  WHERE usertype='agent'
-                  ORDER BY {$profile_table}.rating DESC LIMIT 10", ARRAY_A 
+                      p.ID,
+                      p.area,
+                      p.rating,
+                      p.avatar,
+                      u.display_name as 'name'
+                  FROM
+                    {$profile_table} AS p
+                  JOIN
+                    {$users_table} AS u
+                  ON p.ID=u.ID
+                  WHERE usertype='agent' AND p.rating IS NOT NULL
+                  ORDER BY p.rating DESC LIMIT 10", ARRAY_A 
               )
-          )
+            // )
         ]);
         exit;
       }
