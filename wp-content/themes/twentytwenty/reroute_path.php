@@ -48,7 +48,7 @@ html, body {
 
 add_action("parse_request", function($wp){
 
-  $path = $wp->request;
+  $path = parse_url($wp->request, PHP_URL_PATH);
 
   $match = NULL;
   if(substr($path, 0, 5) === "shop/"){
@@ -61,6 +61,12 @@ add_action("parse_request", function($wp){
 
   $PAGE = "";
   switch($match ?: $path){
+  case "create-appointment":
+    showSveltePage("CreateAppointment");
+    exit;
+  case "qna":
+    showSveltePage("QNA");
+    exit;
   case "view-appointment":
     showSveltePage("ViewAppointment");
     exit;
@@ -115,6 +121,8 @@ add_action("parse_request", function($wp){
 
   if($wp->request === "abcd/efgh/ijkl"){
     echo "<pre>";
+    echo parse_url($wp->request, PHP_URL_PATH);
+    echo "<br />";
     echo strtotime("2020-10-16");
 
     include __DIR__ . "/api/custom_table_constants.php";

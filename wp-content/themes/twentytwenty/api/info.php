@@ -386,6 +386,7 @@ function infoDoPost(){
             "license_verified",
             "rating",
             "phone",
+            "tags",
             "shop_ID",
             "avatar",   // base64 format without prefix
             "license",  // token is required

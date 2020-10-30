@@ -9,6 +9,7 @@ function apiUserDoRegister($body){
     $shops_table = "{$wpdb->prefix}shops";
 
     header('Content-Type: application/json');
+    header("Access-Control-Allow-Origin: *");
     
     $username = $body["username"];
     $password = $body["password"];

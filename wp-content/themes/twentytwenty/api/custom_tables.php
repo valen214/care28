@@ -15,11 +15,13 @@ $wpdb->query("CREATE TABLE IF NOT EXISTS {$profile_table} (
     email_verified      BOOLEAN DEFAULT 0,
     license_verified    BOOLEAN DEFAULT 0,
     rating              FLOAT,
+    tags                TEXT,
     phone               VARCHAR(20),
     shop_ID             BIGINT(20) UNSIGNED,
     avatar              TEXT,
     license             TEXT,
     area                TEXT,
+    unique_referral_code TEXT,
     PRIMARY KEY (ID),
     FOREIGN KEY (ID) REFERENCES {$users_table}(ID) ON DELETE CASCADE
 )");
@@ -44,7 +46,7 @@ $wpdb->query("CREATE TABLE IF NOT EXISTS {$shop_products_table} (
 $wpdb->query("CREATE TABLE IF NOT EXISTS {$appointments_table} (
   ID                  BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
   agent_ID            BIGINT(20) UNSIGNED NOT NULL,
-  client_ID           BIGINT(20) UNSIGNED NOT NULL,
+  client_ID           BIGINT(20) UNSIGNED,
   client_message      TEXT,
   agent_message       TEXT,
   `initiated_date`    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
