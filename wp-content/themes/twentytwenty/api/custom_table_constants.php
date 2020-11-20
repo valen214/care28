@@ -11,7 +11,7 @@ $product_images_table = "{$wpdb->prefix}product_images";
 $appointments_table = "{$wpdb->prefix}appointments";
 $appointment_chat_table = "{$wpdb->prefix}appointment_chat";
 
-
+$posts_table = "{$wpdb->prefix}posts";
 /**
  * /var/www/html/wp-content/uploads/avatar/
  * 

@@ -6,6 +6,7 @@ function showSveltePage($PAGE = "Home", $props = []){
 <html>
 <head>
 
+<title>Care28</title>
 
 <link rel="stylesheet" type="text/css"
     href="/pages/<?php echo $PAGE; ?>.css" />
@@ -61,6 +62,9 @@ add_action("parse_request", function($wp){
 
   $PAGE = "";
   switch($match ?: $path){
+  case "agent":
+    showSveltePage("Agent");
+    exit;
   case "create-appointment":
     showSveltePage("CreateAppointment");
     exit;
@@ -111,10 +115,11 @@ add_action("parse_request", function($wp){
   }
 
 
-  if($wp->request === "edit-profile"){
-    echo "<pre>";
-    var_dump($wp);
-
+  if($wp->request === "jwt-auth/v1/token/validate"){
+    header("Access-Control-Allow-Origin: *");
+    echo json_encode([
+      "result" => "ok"
+    ]);
     exit;
   }
 
@@ -129,6 +134,11 @@ add_action("parse_request", function($wp){
     var_dump($wp);
 
     exit;
+
+    
+    // foreach(range(6, 38) as $id){
+    //   wp_set_password("a", $id);
+    // }
   }
   return $wp;
 });

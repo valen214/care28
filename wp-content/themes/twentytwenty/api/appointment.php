@@ -20,10 +20,10 @@ a.finished,
 a.requested_date,
 a.initiated_date,
 (
-SELECT display_name FROM {$users_table} u WHERE u.ID=a.agent_ID
+  SELECT display_name FROM {$users_table} u WHERE u.ID=a.agent_ID
 ) AS agent_name,
 (
-SELECT display_name FROM {$users_table} u WHERE u.ID=a.client_ID
+  SELECT display_name FROM {$users_table} u WHERE u.ID=a.client_ID
 ) AS client_name
 FROM {$appointments_table} AS a
 WHERE {$id_column}={$user_ID} AND ID={$appointment_id};",
@@ -89,6 +89,10 @@ function appointmentDoPost(){
       }
   
       switch($body["type"]){
+      case "cancel_appointment":
+        include_once __DIR__ . "/appointment/cancel_appointment.php";
+        cancel_appointment($body);
+        exit;
       case "make_appointment":
         make_appointment($body);
         exit;

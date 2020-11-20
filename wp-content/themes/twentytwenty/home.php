@@ -41,9 +41,11 @@ html, body {
   ).then(module => {
     new module.default({
       target: document.body,
-      props: {
+      props: <?php
+      include __DIR__ . "/api/pages/home.php";
+      echo homePageProps();
 
-      }
+      ?>
     });
   });
 })();

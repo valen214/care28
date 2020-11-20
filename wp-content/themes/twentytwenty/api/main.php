@@ -5,6 +5,8 @@ include __DIR__ . "/user.php";
 include __DIR__ . "/info.php";
 include __DIR__ . "/redirect.php";
 include __DIR__ . "/appointment.php";
+include __DIR__ . "/shop/main.php";
+include __DIR__ . "/posts.php";
 
 add_action('rest_api_init', function(){
     register_rest_route( 'api/v1', '/user', array(
@@ -28,6 +30,19 @@ add_action('rest_api_init', function(){
         "methods" => "POST",
         "callback" => "appointmentDoPost",
         'permission_callback' => '__return_true'
+    ));
+
+    register_rest_route("api/v1", "/shop", array(
+      "methods" => "POST",
+      "callback" => "shopDoPost",
+      'permission_callback' => '__return_true'
+    ));
+
+
+    register_rest_route("api/v1", "/posts", array(
+      "methods" => "POST",
+      "callback" => "postsDoPost",
+      'permission_callback' => '__return_true'
     ));
 
     
