@@ -9,6 +9,12 @@ include __DIR__ . "/shop/main.php";
 include __DIR__ . "/posts.php";
 
 add_action('rest_api_init', function(){
+    register_rest_route( 'api/v1', '/redirect', array(
+        'methods' => 'POST',
+        'callback' => 'redirectDoPost',
+        'permission_callback' => '__return_true',
+    ));
+
     register_rest_route( 'api/v1', '/user', array(
         'methods' => 'POST',
         'callback' => 'userDoPost',

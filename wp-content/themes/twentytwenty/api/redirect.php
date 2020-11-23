@@ -1,6 +1,20 @@
 <?php
 
 
+function redirectDoPost(WP_REST_Request $request){
+  $a = file_get_contents('php://input');
+
+  $data = $request->get_body();
+
+  header("Content-Type: application/json");
+  header("Access-Control-Allow-Origin: *");
+  echo json_encode([
+    "a" => $a,
+    "data" => $data
+  ]);
+  exit;
+}
+
 
 function infoV2Redirect(WP_REST_Request $request){
   file_get_contents('php://input');
