@@ -80,16 +80,18 @@ function userDoPost($data){
         $body = json_decode(file_get_contents('php://input'), TRUE);
         if(isset($body["action"])){
             switch($body["action"]){
+            case "validate":
+                
+                exit;
             case "username_exists":
                 header('Content-Type: application/json');
                 http_response_code(200);
                 $exists = username_exists($username);
                 echo json_encode(array('body' => $exists));
                 exit;
-                break;
             case "register";
                 apiUserDoRegister($body);
-                break;
+                exit(0);
     
             case "login":
                 $username = $body["username"];

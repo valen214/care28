@@ -15,6 +15,9 @@ function getUserID($body){
       }
     } catch(Exception $e){
       header('HTTP/1.0 401 Unauthorized');
+      echo json_encode([
+        "message" => "token is invalid when token is required"
+      ]);
       exit;
     }
   }

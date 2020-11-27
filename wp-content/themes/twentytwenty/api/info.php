@@ -653,6 +653,7 @@ function infoDoPost(){
                       p.area,
                       p.rating,
                       p.avatar,
+                      p.shop_ID as shop_id,
                       u.display_name as 'name'
                   FROM
                     {$profile_table} AS p

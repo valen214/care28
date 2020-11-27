@@ -10,6 +10,10 @@ add_action("parse_request", function($wp){
   $match = NULL;
   if(substr($path, 0, 5) === "shop/"){
     $match = "shop";
+    preg_match("/shop\\/(\\d+)/", "shop/123", $m);
+    $props = [
+      "id" => $m[1]
+    ];
   } else if(substr($path, 0, 6) === "pages/"){
     $match = "static_file";
   } else if(substr($path, 0, 17) === "view-appointment/"){
@@ -28,6 +32,9 @@ add_action("parse_request", function($wp){
     exit;
   case "agent":
     showSveltePage("Agent");
+    exit;
+  case "agents":
+    showSveltePage("Agents");
     exit;
   case "create-appointment":
     showSveltePage("CreateAppointment");
@@ -48,7 +55,7 @@ add_action("parse_request", function($wp){
     showSveltePage("EditProfile");
     exit;
   case "shop":
-    showSveltePage("Shop");
+    showSveltePage("Shop", $props);
     exit;
   case "404":
     showSveltePage("404");
@@ -69,12 +76,14 @@ add_action("parse_request", function($wp){
     switch(pathinfo($path, PATHINFO_EXTENSION)){
     case "js":
       header("Content-Type: application/javascript; charset=utf-8");
-      break;
+      header("Access-Control-Allow-Origin: *");
+      readfile(__DIR__ . "/" . $path);
+      exit;
     case "css":
       header("Content-Type: text/css; charset=utf-8");
-      break;
+      readfile(__DIR__ . "/" . $path);
+      exit;
     }
-    readfile(__DIR__ . "/" . $path);
     exit;
   }
 
@@ -90,6 +99,8 @@ add_action("parse_request", function($wp){
 
   if($wp->request === "abcd/efgh/ijkl"){
     echo "<pre>";
+    echo preg_match("/shop\\/(\\d+)/", "shop/123", $match);
+    var_dump($match);
     echo parse_url($wp->request, PHP_URL_PATH);
     echo "<br />";
     echo strtotime("2020-10-16");

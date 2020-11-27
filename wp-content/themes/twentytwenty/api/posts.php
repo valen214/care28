@@ -8,8 +8,11 @@ SELECT
   ID as id,
   post_title AS title,
   post_author AS author,
-  post_content AS content
-FROM care28_posts");
+  post_content AS content,
+  post_modified AS modified,
+  post_date AS date
+FROM care28_posts
+WHERE post_status='publish' AND post_type='post'");
 
   header("Content-Type: application/json");
   header("Access-Control-Allow-Origin: *");
@@ -23,8 +26,12 @@ SELECT
   ID as id,
   post_title AS title,
   post_author AS author,
-  post_content AS content
-FROM care28_posts LIMIT 5");
+  post_content AS content,
+  post_modified AS modified,
+  post_date AS date
+FROM care28_posts
+WHERE post_status='publish' AND post_type='post'
+LIMIT 5");
 
   header("Content-Type: application/json");
   header("Access-Control-Allow-Origin: *");
@@ -39,7 +46,10 @@ SELECT
   post_title AS title,
   post_author AS author,
   post_content AS content
-FROM care28_posts WHERE ID=%d",
+FROM care28_posts
+WHERE ID=%d
+  AND post_status='publish'
+  AND post_type='post'",
     $body["ID"] ?? $body["id"]
   ));
 
