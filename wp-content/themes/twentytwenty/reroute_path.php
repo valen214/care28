@@ -115,5 +115,7 @@ add_action("parse_request", function($wp){
     //   wp_set_password("a", $id);
     // }
   }
+
+  
   return $wp;
 });

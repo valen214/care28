@@ -114,14 +114,35 @@ function userDoPost($data){
                 } else{
                     include __DIR__ . "/custom_table_constants.php";
                     http_response_code(200);
-                    echo json_encode(array(
+
+                    echo json_encode(array_merge(array(
                         "body" => "ok",
                         "usertype" => $wpdb->get_var(
                           "SELECT usertype FROM {$profile_table} WHERE `ID`={$result->ID}"
                         ),
                         "id" => $result->ID,
-                        "signon_result" => $result
-                    ));
+                    ), $wpdb->get_row("
+                    SELECT
+                      p.ID as id,
+                      user_nicename,
+                      display_name,
+                      usertype,
+                      verified,
+                      email_verified,
+                      license_verified,
+                      rating,
+                      phone,
+                      shop_ID,
+                      avatar,
+                      license
+                    FROM
+                      {$profile_table} AS p
+                    JOIN
+                      {$users_table} AS u
+                    ON u.ID=p.ID
+                    WHERE
+                      p.`ID`={$result->ID}
+                    ", ARRAY_A) ?? []));
                     exit(0);
                 }
                 exit(0);

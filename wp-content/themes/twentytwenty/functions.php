@@ -25,6 +25,7 @@
  */
 
 include __DIR__ . "/api/main.php";
+include __DIR__ . "/reroute_path.php";
 
 
 
